@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Job Radar | Kushal B R</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #07090e;
+      --bg-card: rgba(15, 23, 42, 0.72);
+      --bg-card-hover: rgba(26, 38, 66, 0.88);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-hover: rgba(99, 102, 241, 0.45);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-purple: #6366f1;
+      --accent-cyan: #06b6d4;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      --glass-blur: blur(18px);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: radial-gradient(circle at 10% 10%, #151c38 0%, var(--bg-primary) 65%);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      padding: 2rem 1.5rem 5rem;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1320px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    header {
+      margin-bottom: 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1.5rem;
+      padding-bottom: 1.75rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .brand-title {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #fff 35%, #a5b4fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .candidate-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(99, 102, 241, 0.12);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      color: #c7d2fe;
+      margin-top: 0.35rem;
+      font-weight: 600;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .refresh-btn {
+      background: linear-gradient(135deg, var(--accent-purple) 0%, #4338ca 100%);
+      color: #fff;
+      border: none;
+      padding: 0.75rem 1.4rem;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+    }
+    .refresh-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+    }
+    .refresh-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .reset-btn {
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.28);
+      color: #fca5a5;
+      padding: 0.75rem 1.2rem;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+    .reset-btn:hover {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: rgba(239, 68, 68, 0.5);
+      color: #fff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.25);
+    }
+    .reset-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .batch-btn {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      color: #fff;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      padding: 0.75rem 1.3rem;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+      box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+    }
+    .batch-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(14, 165, 233, 0.5);
+    }
+    .batch-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .stop-banner-btn {
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      color: #fca5a5;
+      padding: 0.4rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .stop-banner-btn:hover {
+      background: rgba(239, 68, 68, 0.4);
+      color: #fff;
+    }
+
+    .empty-rerun-btn {
+      background: linear-gradient(135deg, var(--accent-purple) 0%, #4338ca 100%);
+      color: #fff;
+      border: none;
+      padding: 0.85rem 1.7rem;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+      box-shadow: 0 4px 18px rgba(99, 102, 241, 0.4);
+      margin-top: 1.25rem;
+    }
+    .empty-rerun-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(99, 102, 241, 0.6);
+    }
+
+    /* Status Banner */
+    .status-banner {
+      display: none;
+      background: rgba(99, 102, 241, 0.12);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      border-radius: 14px;
+      padding: 1rem 1.5rem;
+      margin-bottom: 2rem;
+      backdrop-filter: var(--glass-blur);
+      animation: pulse 2s infinite;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .status-banner.active {
+      display: flex;
+    }
+    .status-text {
+      font-size: 0.95rem;
+      color: #e0e7ff;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 3px solid rgba(255, 255, 255, 0.2);
+      border-top-color: var(--accent-cyan);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.25rem 1.5rem;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--border-hover);
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .stat-val {
+      font-size: 2.1rem;
+      font-weight: 800;
+      color: #fff;
+      margin-top: 0.25rem;
+    }
+
+    /* Controls */
+    .controls {
+      background: var(--bg-card);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.25rem;
+      margin-bottom: 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .search-box {
+      position: relative;
+      flex: 1;
+      max-width: 400px;
+      min-width: 260px;
+    }
+    .search-input {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--border-color);
+      color: #fff;
+      padding: 0.7rem 1.2rem;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-input:focus {
+      border-color: var(--accent-purple);
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 0.55rem 1rem;
+      border-radius: 9px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-btn:hover, .filter-btn.active {
+      background: var(--accent-purple);
+      color: #fff;
+      border-color: var(--accent-purple);
+    }
+
+    /* Job Grid */
+    .jobs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .job-card {
+      background: var(--bg-card);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.25s ease, border-color 0.25s, box-shadow 0.25s;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .job-card:hover {
+      background: var(--bg-card-hover);
+      transform: translateY(-4px);
+      border-color: var(--border-hover);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .job-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .job-role-info {
+      flex: 1;
+    }
+
+    .job-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.35;
+      margin-bottom: 0.35rem;
+    }
+
+    .job-company {
+      font-size: 0.95rem;
+      color: var(--accent-cyan);
+      font-weight: 600;
+    }
+
+    .score-badge {
+      padding: 0.45rem 0.85rem;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 0.95rem;
+      text-align: center;
+      min-width: 65px;
+    }
+    .score-high {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.45);
+      color: var(--accent-green);
+    }
+    .score-mid {
+      background: rgba(6, 182, 212, 0.15);
+      border: 1px solid rgba(6, 182, 212, 0.45);
+      color: var(--accent-cyan);
+    }
+    .score-low {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.45);
+      color: var(--accent-amber);
+    }
+    .score-unassessed {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    .meta-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin: 0.75rem 0 1.2rem;
+    }
+
+    .meta-tag {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--text-muted);
+    }
+    .tag-platform {
+      background: rgba(99, 102, 241, 0.15);
+      color: #a5b4fc;
+      border-color: rgba(99, 102, 241, 0.3);
+      text-transform: capitalize;
+    }
+    .tag-remote {
+      background: rgba(16, 185, 129, 0.12);
+      color: #6ee7b7;
+      border-color: rgba(16, 185, 129, 0.25);
+    }
+
+    .ai-analysis {
+      background: rgba(0, 0, 0, 0.28);
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      margin-bottom: 1.25rem;
+      font-size: 0.85rem;
+      border-left: 3px solid var(--accent-purple);
+    }
+
+    .ai-reason {
+      color: #e2e8f0;
+      margin-bottom: 0.5rem;
+      line-height: 1.45;
+    }
+
+    .skill-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 0.4rem;
+    }
+
+    .pill-match {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .pill-missing {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .apply-btn {
+      display: block;
+      width: 100%;
+      text-align: center;
+      background: linear-gradient(135deg, var(--accent-purple) 0%, #4f46e5 100%);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 700;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .apply-btn:hover {
+      opacity: 0.95;
+      transform: scale(1.01);
+    }
+
+    /* Sentinel / Infinite Loader */
+    .infinite-status {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.85; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1 class="brand-title">⚡ AI Job Radar</h1>
+        <div class="candidate-tag">
+          👤 Kushal B R &bull; AI & Platform Engineer (1.5 yrs exp)
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="resetBtn" class="reset-btn" onclick="triggerReset()">
+          <span>🗑️</span> Reset Database
+        </button>
+        <button id="batchBtn" class="batch-btn" onclick="triggerBatchAnalysis()">
+          <span>🤖</span> Batch Analyze All (AI)
+        </button>
+        <button id="refreshBtn" class="refresh-btn" onclick="triggerRefresh()">
+          <span>🔄</span> Refresh 24H Jobs
+        </button>
+      </div>
+    </header>
+
+    <!-- Live Status Banner -->
+    <div id="statusBanner" class="status-banner">
+      <div class="status-text">
+        <div class="spinner"></div>
+        <span id="statusMessage">Scanning job boards...</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <span id="statusElapsed" style="font-size: 0.85rem; color: #a5b4fc; font-weight: 600;">0s</span>
+        <button id="stopBannerBtn" class="stop-banner-btn" onclick="triggerStop()">⏸️ Pause</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Jobs Scraped</div>
+        <div class="stat-val" id="statTotalJobs">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">AI Evaluated</div>
+        <div class="stat-val" id="statEvaluatedJobs" style="color: #38bdf8;">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Strong Matches (≥75%)</div>
+        <div class="stat-val" id="statStrongMatches" style="color: var(--accent-green);">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Moderate (60-74%)</div>
+        <div class="stat-val" id="statModerateMatches" style="color: var(--accent-cyan);">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Avg Match Score</div>
+        <div class="stat-val" id="statAvgScore">0%</div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <div class="search-box">
+        <input type="text" id="searchInput" class="search-input" placeholder="Search by role, company, or tech stack...">
+      </div>
+      <div class="filter-group">
+        <button class="filter-btn active" onclick="setFilter('all', this)">All Jobs</button>
+        <button class="filter-btn" onclick="setFilter('high', this)">75%+ Score</button>
+        <button class="filter-btn" onclick="setFilter('mid', this)">60%+ Score</button>
+        <button class="filter-btn" onclick="setFilter('ai', this)">AI Verified</button>
+        <button class="filter-btn" onclick="toggleRemote(this)">Remote Only</button>
+      </div>
+    </div>
+
+    <!-- Infinite Scroll Job Cards -->
+    <div class="jobs-grid" id="jobsGrid"></div>
+
+    <!-- Infinite Scroll Sentinel -->
+    <div id="scrollSentinel" class="infinite-status">
+      <div id="infiniteSpinner" class="spinner" style="display: none;"></div>
+      <span id="infiniteText">Loading fresh opportunities...</span>
+    </div>
+  </div>
+
+  <script>
+    let currentPage = 1;
+    const limit = 12;
+    let hasMore = true;
+    let isLoading = false;
+    let currentFilter = 'all';
+    let remoteOnly = false;
+    let searchQuery = '';
+    let pollingInterval = null;
+
+    const jobsGrid = document.getElementById('jobsGrid');
+    const searchInput = document.getElementById('searchInput');
+    const scrollSentinel = document.getElementById('scrollSentinel');
+    const infiniteSpinner = document.getElementById('infiniteSpinner');
+    const infiniteText = document.getElementById('infiniteText');
+    const statusBanner = document.getElementById('statusBanner');
+    const statusMessage = document.getElementById('statusMessage');
+    const statusElapsed = document.getElementById('statusElapsed');
+    const refreshBtn = document.getElementById('refreshBtn');
+
+    // Debounced search
+    let debounceTimer;
+    searchInput.addEventListener('input', (e) => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        searchQuery = e.target.value.trim();
+        resetAndFetch();
+      }, 300);
+    });
+
+    function setFilter(filterType, btn) {
+      document.querySelectorAll('.filter-group .filter-btn').forEach(b => {
+        if (!b.innerText.includes('Remote')) b.classList.remove('active');
+      });
+      btn.classList.add('active');
+      currentFilter = filterType;
+      resetAndFetch();
+    }
+
+    function toggleRemote(btn) {
+      remoteOnly = !remoteOnly;
+      btn.classList.toggle('active', remoteOnly);
+      resetAndFetch();
+    }
+
+    function resetAndFetch() {
+      currentPage = 1;
+      hasMore = true;
+      jobsGrid.innerHTML = '';
+      fetchJobs(currentPage, true);
+    }
+
+    async function fetchJobs(page, isReset = false) {
+      if (isLoading || (!hasMore && !isReset)) return;
+      isLoading = true;
+      infiniteSpinner.style.display = 'block';
+      infiniteText.innerText = 'Fetching fresh jobs...';
+
+      let url = `/api/jobs?page=${page}&limit=${limit}`;
+      if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
+      if (remoteOnly) url += `&remote_only=true`;
+      if (currentFilter === 'high') url += `&min_score=75`;
+      else if (currentFilter === 'mid') url += `&min_score=60`;
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        hasMore = data.has_more;
+        currentPage = data.page;
+
+        renderJobBatch(data.jobs);
+
+        if (!hasMore) {
+          infiniteSpinner.style.display = 'none';
+          infiniteText.innerText = `✨ You've reached the end of ${data.total} listings.`;
+        } else {
+          infiniteSpinner.style.display = 'none';
+          infiniteText.innerText = `Scroll down for more jobs (${data.total} total)...`;
+        }
+      } catch (err) {
+        console.error("Failed to fetch jobs:", err);
+        infiniteSpinner.style.display = 'none';
+        infiniteText.innerText = 'Error loading jobs. Please check if the backend is running.';
+      } finally {
+        isLoading = false;
+      }
+    }
+
+    function renderJobBatch(jobs) {
+      if (!jobs || jobs.length === 0) {
+        if (currentPage === 1) {
+          jobsGrid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 4rem 1rem; color: var(--text-muted); font-size: 1.05rem;">
+              <div style="font-size: 2.2rem; margin-bottom: 0.75rem;">🔍</div>
+              <strong>No jobs found in the database.</strong><br>
+              <span style="font-size: 0.9rem; color: #64748b; margin-top: 0.35rem; display: inline-block;">
+                Click below to scan LinkedIn, Indeed, and Glassdoor for the last 24 hours.
+              </span><br>
+              <button class="empty-rerun-btn" onclick="triggerRefresh()">
+                <span>🚀</span> Run 24H Scraper & AI Matcher
+              </button>
+            </div>
+          `;
+        }
+        return;
+      }
+
+      jobs.forEach(job => {
+        const card = document.createElement('div');
+        card.className = 'job-card';
+
+        const score = job.match_score || 0;
+        let scoreClass = 'score-unassessed';
+        let scoreText = score > 0 ? `${score}%` : 'Fresh';
+        if (score >= 75) scoreClass = 'score-high';
+        else if (score >= 60) scoreClass = 'score-mid';
+        else if (score > 0) scoreClass = 'score-low';
+
+        // Skills pills
+        let skillsHtml = '';
+        if (job.matching_skills && job.matching_skills.length > 0) {
+          skillsHtml += '<div class="skill-pills">';
+          job.matching_skills.forEach(s => skillsHtml += `<span class="pill-match">✓ ${escapeHtml(s)}</span>`);
+          skillsHtml += '</div>';
+        }
+        if (job.missing_skills && job.missing_skills.length > 0) {
+          skillsHtml += '<div class="skill-pills">';
+          job.missing_skills.forEach(m => skillsHtml += `<span class="pill-missing">✕ ${escapeHtml(m)}</span>`);
+          skillsHtml += '</div>';
+        }
+
+        // AI reason box
+        let aiHtml = '';
+        if (job.summary_reason) {
+          aiHtml = `
+            <div class="ai-analysis">
+              <div class="ai-reason">${escapeHtml(job.summary_reason)}</div>
+              ${skillsHtml}
+            </div>
+          `;
+        }
+
+        card.innerHTML = `
+          <div>
+            <div class="job-card-top">
+              <div class="job-role-info">
+                <h2 class="job-title">${escapeHtml(job.title)}</h2>
+                <div class="job-company">${escapeHtml(job.company)}</div>
+              </div>
+              <div class="score-badge ${scoreClass}">
+                ${scoreText}
+              </div>
+            </div>
+
+            <div class="meta-badges">
+              <span class="meta-tag tag-platform">${escapeHtml(job.site)}</span>
+              <span class="meta-tag">📍 ${escapeHtml(job.location)}</span>
+              ${job.is_remote ? '<span class="meta-tag tag-remote">🌐 Remote</span>' : ''}
+              ${job.salary ? `<span class="meta-tag">💰 ${escapeHtml(job.salary)}</span>` : ''}
+              ${job.date_posted ? `<span class="meta-tag">🕒 ${escapeHtml(job.date_posted)}</span>` : ''}
+            </div>
+
+            ${aiHtml}
+          </div>
+
+          <a href="${job.job_url}" target="_blank" rel="noopener noreferrer" class="apply-btn">
+            Apply on ${capitalize(job.site)} →
+          </a>
+        `;
+
+        jobsGrid.appendChild(card);
+      });
+    }
+
+    async function updateStats() {
+      try {
+        const res = await fetch('/api/stats');
+        const stats = await res.json();
+        document.getElementById('statTotalJobs').innerText = stats.total_jobs || 0;
+        const evalEl = document.getElementById('statEvaluatedJobs');
+        if (evalEl) {
+          evalEl.innerText = `${stats.evaluated_jobs || 0} / ${stats.total_jobs || 0}`;
+        }
+        document.getElementById('statStrongMatches').innerText = stats.strong_matches || 0;
+        document.getElementById('statModerateMatches').innerText = stats.moderate_matches || 0;
+        document.getElementById('statAvgScore').innerText = `${stats.avg_score || 0}%`;
+      } catch (e) {
+        console.error("Stats update failed:", e);
+      }
+    }
+
+    async function triggerReset() {
+      const confirmed = confirm("Are you sure you want to reset the database? This will clear all stored jobs and reset statistics so you can start a fresh scrape.");
+      if (!confirmed) return;
+
+      const resetBtn = document.getElementById('resetBtn');
+      resetBtn.disabled = true;
+
+      try {
+        const res = await fetch('/api/reset?clear_files=true', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          jobsGrid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 4rem 1rem; color: var(--text-muted); font-size: 1.05rem;">
+              <div style="font-size: 2.2rem; margin-bottom: 0.75rem;">🗑️</div>
+              <strong>Database has been reset successfully.</strong><br>
+              <span style="font-size: 0.9rem; color: #64748b; margin-top: 0.35rem; display: inline-block;">
+                All jobs cleared. Click below anytime to scan and match fresh opportunities:
+              </span><br>
+              <button class="empty-rerun-btn" onclick="triggerRefresh()">
+                <span>🚀</span> Run 24H Scraper & AI Matcher
+              </button>
+            </div>
+          `;
+          currentPage = 1;
+          hasMore = false;
+          infiniteSpinner.style.display = 'none';
+          infiniteText.innerText = 'Database is currently empty.';
+          await updateStats();
+        } else {
+          alert("Reset failed: " + data.message);
+        }
+      } catch (err) {
+        alert("Error resetting database: " + err.message);
+      } finally {
+        resetBtn.disabled = false;
+      }
+    }
+
+    async function triggerRefresh() {
+      const refreshBtn = document.getElementById('refreshBtn');
+      const batchBtn = document.getElementById('batchBtn');
+      if (refreshBtn) refreshBtn.disabled = true;
+      if (batchBtn) batchBtn.disabled = true;
+
+      try {
+        const res = await fetch('/api/refresh?limit_eval=30&continuous=true', { method: 'POST' });
+        const data = await res.json();
+        startStatusPolling();
+      } catch (e) {
+        alert("Failed to start refresh: " + e.message);
+        if (refreshBtn) refreshBtn.disabled = false;
+        if (batchBtn) batchBtn.disabled = false;
+      }
+    }
+
+    async function triggerBatchAnalysis() {
+      const batchBtn = document.getElementById('batchBtn');
+      const refreshBtn = document.getElementById('refreshBtn');
+      if (batchBtn) batchBtn.disabled = true;
+      if (refreshBtn) refreshBtn.disabled = true;
+
+      try {
+        const res = await fetch('/api/analyze-all?batch_size=10', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          startStatusPolling();
+        } else {
+          alert(data.message || "Failed to start batch analysis");
+          if (batchBtn) batchBtn.disabled = false;
+          if (refreshBtn) refreshBtn.disabled = false;
+        }
+      } catch (e) {
+        alert("Failed to start batch analysis: " + e.message);
+        if (batchBtn) batchBtn.disabled = false;
+        if (refreshBtn) refreshBtn.disabled = false;
+      }
+    }
+
+    async function triggerStop() {
+      try {
+        const res = await fetch('/api/stop', { method: 'POST' });
+        const data = await res.json();
+        const statusMsg = document.getElementById('statusMessage');
+        if (statusMsg) statusMsg.innerText = "Pausing analysis...";
+      } catch (e) {
+        console.error("Stop error:", e);
+      }
+    }
+
+    function startStatusPolling() {
+      statusBanner.classList.add('active');
+      const refreshBtn = document.getElementById('refreshBtn');
+      const batchBtn = document.getElementById('batchBtn');
+      if (refreshBtn) refreshBtn.disabled = true;
+      if (batchBtn) batchBtn.disabled = true;
+
+      if (pollingInterval) clearInterval(pollingInterval);
+
+      pollingInterval = setInterval(async () => {
+        try {
+          const res = await fetch('/api/status');
+          const data = await res.json();
+
+          statusMessage.innerText = data.status_message || "Processing...";
+          statusElapsed.innerText = `${data.elapsed_seconds || 0}s`;
+
+          // If still running, keep refreshing stats and progressively update list
+          if (data.is_running) {
+            updateStats();
+          } else {
+            // Finished or stopped
+            clearInterval(pollingInterval);
+            statusBanner.classList.remove('active');
+            if (refreshBtn) refreshBtn.disabled = false;
+            if (batchBtn) batchBtn.disabled = false;
+            updateStats();
+            resetAndFetch(); // Refresh the list with newly added/evaluated jobs!
+          }
+        } catch (e) {
+          console.error("Status poll error:", e);
+        }
+      }, 2000);
+    }
+
+    // Infinite scroll observer
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && hasMore && !isLoading) {
+        fetchJobs(currentPage + 1);
+      }
+    }, { rootMargin: '250px' });
+
+    observer.observe(scrollSentinel);
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function capitalize(str) {
+      if (!str) return '';
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    // Initial load
+    updateStats();
+    fetchJobs(1);
+  </script>
+</body>
+</html>

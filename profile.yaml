@@ -1,0 +1,171 @@
+# ============================================================
+# AI Job Searcher - Candidate Profile & Search Configuration
+# Candidate: Kushal B R (AI & Platform Engineer)
+# ============================================================
+
+# Search Criteria
+search:
+  # Target job roles matching Kushal's GenAI, Backend, & SDE background
+  keywords:
+    - "AI Engineer"
+    - "GenAI Engineer"
+    - "AI Developer"
+    - "Python AI Developer"
+    - "SDE 1"
+    - "Software Engineer 1"
+    - "Associate Software Engineer"
+    - "Backend Developer"
+    - "Full Stack Developer"
+
+  # Target locations
+  locations:
+    - "Bengaluru"
+    - "Remote"
+    - "Hyderabad"
+    - "Pune"
+
+  # Freshness filter: Last 24 hours
+  hours_old: 24
+
+  # Target results wanted per query per site
+  results_per_query: 122
+
+  # Job portals to scrape: "linkedin", "indeed", "glassdoor"
+  sites:
+    - "linkedin"
+    - "indeed"
+    - "glassdoor"
+
+  # Country code
+  country: "india"
+
+  # Filter remote jobs specifically (true / false / null for both)
+  is_remote: null
+
+# Experience & Seniority Filter (Addresses seniority mismatch)
+experience_filter:
+  max_experience_years: 3
+  exclude_senior_titles: true
+  senior_keywords:
+    - "senior"
+    - "sr."
+    - "sr "
+    - "lead"
+    - "principal"
+    - "architect"
+    - "staff"
+    - "director"
+    - "manager"
+    - "head of"
+    - "vp"
+    - "expert"
+    - "consultant - senior"
+    - "specialist iii"
+    - "engineer iii"
+    - "7+ years"
+    - "8+ years"
+    - "10+ years"
+
+# Execution Controls
+execution:
+  # Number of jobs to evaluate in-depth using local Ollama (0 = evaluate all non-senior jobs)
+  evaluate_limit: 30
+  # Whether to include all scraped jobs in the HTML Dashboard & CSV (even if unassessed by LLM)
+  include_all_in_report: true
+
+# Candidate Profile for AI Matching (Extracted from Resume)
+candidate_profile:
+  full_name: "Kushal B R"
+  title: "AI & Platform Engineer / GenAI Developer"
+  years_of_experience: 2
+  education: "B.E. in Computer Science and Engineering (2020-2024), Atria Institute of Technology, Bangalore (GPA: 8.5)"
+  
+  # Core Technical Skills
+  skills:
+    # GenAI & AIOps
+    - "GenAI Pipelines & Prompt Engineering"
+    - "RAG Pipelines & Embeddings"
+    - "Multi-Agent Orchestration (LangGraph, LangChain)"
+    - "LlamaIndex & Intent Models"
+    - "Operational Chatbots & Multimodal LLMs"
+    # Cloud & Infrastructure
+    - "Google Cloud Platform (GCP)"
+    - "Vertex AI & Cloud Run"
+    - "Cloud Storage, Batch API, Pub/Sub"
+    - "Docker & Cloud-Native Microservices"
+    # Languages & Backend
+    - "Python"
+    - "Java (Spring Boot)"
+    - "Node.js & Express JS"
+    - "RESTful APIs & Microservices"
+    # Databases & Observability
+    - "PostgreSQL & MongoDB"
+    - "BigQuery & Redis"
+    - "Structured Logging & Observability (Arize Phoenix)"
+    - "CI/CD & Automated Retries"
+
+  # Preferences & Work Setup
+  preferences:
+    - "Roles matching 0-3 years experience (SDE 1, Associate Engineer, Junior to Mid AI/Backend Engineer)"
+    - "GenAI, LLM Application Development, Multi-Agent Systems, or Platform/Backend Engineering"
+    - "Bengaluru, Remote, Hyderabad, or Pune"
+
+  # Dealbreakers to filter out
+  dealbreakers:
+    - "Roles requiring 4+ years of senior/lead experience"
+    - "Unpaid internships or low-stipend internships"
+    - "Legacy enterprise tools (AS400, Mainframe, Progress Corticon, Odoo ERP, COBOL, SAP)"
+    - "Non-technical roles / customer support / commission sales"
+
+  # Bio Summary for Ollama Context
+  bio_summary: >
+    AI & Platform Engineer with 1.5 years experience building scalable GenAI pipelines,
+    intelligent operational agents, and automated workflows on Google Cloud Platform (GCP).
+    Proficient in Python, Java (Spring Boot), and Node.js with hands-on expertise in LangGraph,
+    LangChain, RAG architectures, Vertex AI, Cloud Run, and event-driven systems (Pub/Sub).
+    Currently working as AI Developer at TCS, with prior Full Stack and AI/ML internship experience.
+
+# AI Matching Engine Settings
+ai_matcher:
+  # LLM Provider: 'ollama' (free local) or 'free_api' (Groq/Gemini)
+  provider: "ollama"
+
+  # Ollama Configuration
+  ollama:
+    model: "llama3.2:latest"
+    base_url: "http://localhost:11434"
+
+  # Optional Free Cloud API (e.g., Groq free tier or Gemini)
+  free_api:
+    provider: "groq"
+    api_key: ""
+    model: "llama-3.3-70b-versatile"
+
+  # Minimum AI score (0-100) to flag as a recommended match
+  min_match_score: 60
+
+# Notifications (For future hosting & automated daily alerts)
+notifications:
+  enabled: false
+
+  channels:
+    email:
+      enabled: false
+      smtp_server: "smtp.gmail.com"
+      smtp_port: 587
+      sender_email: ""
+      sender_password: ""
+      recipient_email: ""
+
+    whatsapp:
+      # Free WhatsApp via CallMeBot (https://www.callmebot.com/)
+      enabled: false
+      provider: "callmebot"
+      phone_number: ""
+      api_key: ""
+
+    telegram:
+      # Free Telegram Bot alert
+      enabled: false
+      bot_token: ""
+      chat_id: ""

@@ -1,0 +1,12 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.git/
+.gitignore
+results/jobs_*.*
+scratch/
+scratch_test.js
+.DS_Store
