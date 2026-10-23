@@ -212,6 +212,38 @@ def send_single_job_email(job: JobPost, analysis: MatchAnalysis, cfg: Notificati
         return False
 
 
+def format_telegram_job_message(job: JobPost, analysis: MatchAnalysis) -> str:
+    """Format a clean HTML message for Telegram with clickable link and preview."""
+    score = analysis.match_score
+    skills_text = ", ".join(analysis.key_matching_skills[:5]) if analysis.key_matching_skills else "Strong overall profile fit"
+
+    clean_title = job.title.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    clean_company = job.company.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    clean_loc = job.location.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    clean_reason = (analysis.summary_reason or "High alignment with your skills and background.").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    clean_skills = skills_text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+    jd_snippet = ""
+    if job.description:
+        desc = " ".join(job.description.split())
+        clean_desc = desc[:700].replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        jd_snippet = clean_desc + "..." if len(desc) > 700 else clean_desc
+
+    msg = f"🎯 <b>High Match Job Alert ({score}%)</b>\n\n"
+    msg += f"💼 <b>Role:</b> {clean_title}\n"
+    msg += f"🏢 <b>Company:</b> {clean_company}\n"
+    msg += f"📍 <b>Location:</b> {clean_loc} ({job.site.upper()})\n"
+    if job.salary:
+        msg += f"💰 <b>Salary:</b> {job.salary}\n"
+    msg += f"\n💡 <b>Why You Match:</b>\n{clean_reason}\n"
+    msg += f"\n✅ <b>Key Skills:</b> {clean_skills}\n"
+    msg += f"\n🔗 <b><a href=\"{job.job_url}\">Click Here to Apply on {job.site.capitalize()}</a></b>\n"
+    if jd_snippet:
+        msg += f"\n📋 <b>JD Preview:</b>\n{jd_snippet}\n"
+
+    return msg
+
+
 def send_single_job_telegram(job: JobPost, analysis: MatchAnalysis, cfg: NotificationsConfig) -> bool:
     """Send individual job alert to Telegram bot."""
     tg_cfg = cfg.channels.telegram
@@ -219,19 +251,21 @@ def send_single_job_telegram(job: JobPost, analysis: MatchAnalysis, cfg: Notific
         return False
 
     try:
-        message_text = format_whatsapp_job_message(job, analysis)
+        message_text = format_telegram_job_message(job, analysis)
         url = f"https://api.telegram.org/bot{tg_cfg.bot_token}/sendMessage"
         payload = {
             "chat_id": tg_cfg.chat_id,
             "text": message_text,
-            "parse_mode": "Markdown",
+            "parse_mode": "HTML",
             "disable_web_page_preview": False
         }
         res = requests.post(url, json=payload, timeout=15)
         if res.status_code == 200:
-            console.print(f"[green]✓ Telegram alert sent: {job.title[:25]}[/green]")
+            console.print(f"[green]✓ Telegram alert sent: {job.title[:25]} ({analysis.match_score}% match)[/green]")
             return True
-        return False
+        else:
+            logger.warning(f"Telegram API returned {res.status_code}: {res.text}")
+            return False
     except Exception as e:
         logger.error(f"Telegram alert error: {e}")
         return False
