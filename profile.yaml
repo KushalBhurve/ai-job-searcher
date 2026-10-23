@@ -35,6 +35,12 @@ search:
   sites:
     - "linkedin"
     - "indeed"
+    - "glassdoor"
+    - "ziprecruiter"
+    - "bayt"
+    - "naukri"
+    - "bdjobs"
+    - "hellowork"
 
   # Country code
   country: "india"
