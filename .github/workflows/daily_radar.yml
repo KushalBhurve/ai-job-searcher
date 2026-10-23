@@ -44,13 +44,13 @@ jobs:
           NOTIFICATIONS_ENABLED: 'true'
           NOTIFICATION_MIN_SCORE: '60'
 
-          # WhatsApp via CallMeBot (Free)
-          WHATSAPP_ENABLED: ${{ secrets.WHATSAPP_ENABLED || 'true' }}
-          CALLMEBOT_PHONE: ${{ secrets.CALLMEBOT_PHONE }}
-          CALLMEBOT_API_KEY: ${{ secrets.CALLMEBOT_API_KEY }}
+          # Telegram Bot Alerts (Free, Fast Mobile Push)
+          TELEGRAM_ENABLED: ${{ secrets.TELEGRAM_ENABLED || 'true' }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 
-          # Email via Gmail SMTP (Optional)
-          EMAIL_ENABLED: ${{ secrets.EMAIL_ENABLED || 'false' }}
+          # Email via Gmail SMTP (Full HTML Scorecard & 1-Click Apply)
+          EMAIL_ENABLED: ${{ secrets.EMAIL_ENABLED || 'true' }}
           GMAIL_SENDER: ${{ secrets.GMAIL_SENDER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
