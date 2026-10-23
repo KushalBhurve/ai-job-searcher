@@ -16,6 +16,9 @@ search:
     - "Associate Software Engineer"
     - "Backend Developer"
     - "Full Stack Developer"
+    - "Data Scientist"
+    - "ML Engineer"
+    - "MLOPS Engineer"
 
   # Target locations: Bengaluru & Remote only (jobs outside Bangalore must be remote)
   locations:
