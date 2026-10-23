@@ -123,23 +123,26 @@ Evaluate the candidate for this job and return the JSON evaluation.
             )
 
         elif ai_cfg.provider == "free_api" and ai_cfg.free_api.provider == "groq":
-            # Groq free tier OpenAI-compatible endpoint
-            import requests
-            headers = {
-                "Authorization": f"Bearer {ai_cfg.free_api.api_key}",
-                "Content-Type": "application/json"
-            }
-            payload = {
-                "model": ai_cfg.free_api.model,
-                "messages": [
+            key = (ai_cfg.free_api.api_key or "").strip()
+            if not key or not key.startswith("gsk_"):
+                masked = f"{key[:4]}..." if len(key) >= 4 else "empty"
+                raise ValueError(
+                    f"Invalid Groq API key '{masked}'. Groq API keys start with 'gsk_'. "
+                    f"Note: 16-letter codes (like 'nkyi dvyw...') are Gmail App Passwords, not Groq keys! "
+                    f"Please get a free Groq key at https://console.groq.com/keys and set GROQ_API_KEY."
+                )
+
+            from groq import Groq
+            client = Groq(api_key=key)
+            completion = client.chat.completions.create(
+                model=ai_cfg.free_api.model or "llama-3.3-70b-versatile",
+                messages=[
                     {"role": "system", "content": EVALUATION_SYSTEM_PROMPT},
                     {"role": "user", "content": user_prompt}
                 ],
-                "response_format": {"type": "json_object"}
-            }
-            res = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload, timeout=30)
-            res.raise_for_status()
-            content = res.json()["choices"][0]["message"]["content"]
+                response_format={"type": "json_object"}
+            )
+            content = completion.choices[0].message.content
             parsed = extract_json(content)
             return MatchAnalysis(
                 match_score=int(parsed.get("match_score", 50)),

@@ -1,5 +1,6 @@
 python-jobspy>=1.1.66
 ollama>=0.4.0
+groq>=0.9.0
 pydantic>=2.7.0
 pandas>=2.2.0
 pyyaml>=6.0.1
