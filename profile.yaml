@@ -17,24 +17,21 @@ search:
     - "Backend Developer"
     - "Full Stack Developer"
 
-  # Target locations
+  # Target locations: Bengaluru & Remote only (jobs outside Bangalore must be remote)
   locations:
     - "Bengaluru"
     - "Remote"
-    - "Hyderabad"
-    - "Pune"
 
   # Freshness filter: Last 24 hours
   hours_old: 24
 
-  # Target results wanted per query per site
-  results_per_query: 122
+  # Target results wanted per query per site (25 is optimal for 24h freshness)
+  results_per_query: 25
 
-  # Job portals to scrape: "linkedin", "indeed", "glassdoor"
+  # Job portals to scrape: "linkedin", "indeed" (Glassdoor blocks datacenter IPs with 403)
   sites:
     - "linkedin"
     - "indeed"
-    - "glassdoor"
 
   # Country code
   country: "india"
@@ -108,11 +105,12 @@ candidate_profile:
   preferences:
     - "Roles matching 0-3 years experience (SDE 1, Associate Engineer, Junior to Mid AI/Backend Engineer)"
     - "GenAI, LLM Application Development, Multi-Agent Systems, or Platform/Backend Engineering"
-    - "Bengaluru, Remote, Hyderabad, or Pune"
+    - "Bengaluru (Bangalore) or 100% Remote roles only"
 
   # Dealbreakers to filter out
   dealbreakers:
     - "Roles requiring 4+ years of senior/lead experience"
+    - "On-site or hybrid roles located outside Bengaluru/Bangalore (must be in Bengaluru or 100% Remote)"
     - "Unpaid internships or low-stipend internships"
     - "Legacy enterprise tools (AS400, Mainframe, Progress Corticon, Odoo ERP, COBOL, SAP)"
     - "Non-technical roles / customer support / commission sales"

@@ -21,10 +21,16 @@ CRITICAL EXPERIENCE & SENIORITY RULES:
    - Score it LOW (< 45).
    - In "missing_skills_or_gaps", explicitly include: "Experience mismatch: Role requires senior-level years (candidate has 1.5 years)".
    - In "summary_reason", highlight the seniority gap as the primary reason.
-3. If the role is for Early Career / Junior / SDE 1 / Mid-level (0 - 3 years experience):
+3. LOCATION PREFERENCE RULES:
+   - The candidate STRICTLY wants roles located in Bengaluru (Bangalore) OR 100% Remote roles.
+   - If a job is explicitly on-site or hybrid in another city (e.g. Hyderabad, Pune, Mumbai, Delhi, Gurgaon, Noida, Chennai) and NOT remote:
+     - Score it LOW (< 45).
+     - In "missing_skills_or_gaps", include: "Location mismatch: On-site/hybrid role outside Bengaluru (candidate only accepts Bengaluru or Remote)".
+     - In "recommended_action", say "Skip".
+4. If the role is for Early Career / Junior / SDE 1 / Mid-level (0 - 3 years experience) in Bengaluru or Remote:
    - If candidate's skills (Python, GenAI, LangChain, LangGraph, Vertex AI, GCP, Node.js, Java Spring Boot) match, award a HIGH score (75 - 95).
    - In "recommended_action", say "Apply now".
-4. Return ONLY valid JSON with this exact schema:
+5. Return ONLY valid JSON with this exact schema:
 {
   "match_score": <integer from 0 to 100>,
   "decision": "<STRONG_MATCH | MODERATE_MATCH | LOW_MATCH>",
@@ -33,7 +39,7 @@ CRITICAL EXPERIENCE & SENIORITY RULES:
   "summary_reason": "<1-2 concise sentences explaining score and experience fit>",
   "recommended_action": "<Apply now | Consider applying | Skip>"
 }
-5. Return raw JSON without markdown formatting.
+6. Return raw JSON without markdown formatting.
 """
 
 def extract_json(text: str) -> dict:

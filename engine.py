@@ -6,7 +6,7 @@ from rich.console import Console
 
 import db
 from config import load_config
-from scraper import scrape_all_jobs
+from scraper import scrape_all_jobs, is_acceptable_location
 from matcher import evaluate_single_job
 from models import JobPost, MatchAnalysis
 from notifier import notify_job_match
@@ -104,6 +104,7 @@ class ScrapeEngine:
 
             # 1. Run Scrape
             jobs = scrape_all_jobs(cfg.search)
+            jobs = [j for j in jobs if is_acceptable_location(j.location, j.is_remote, j.title)]
             if self._stop_event.is_set():
                 with self._lock:
                     self.status_message = "Scrape stopped by user."

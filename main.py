@@ -15,7 +15,7 @@ from rich.console import Console
 from rich.panel import Panel
 
 from config import load_config
-from scraper import scrape_all_jobs
+from scraper import scrape_all_jobs, is_acceptable_location
 from matcher import evaluate_all_jobs, evaluate_single_job
 from reporter import print_terminal_summary, export_reports
 from notifier import dispatch_all_notifications, notify_job_match
@@ -80,6 +80,8 @@ def run_job_search(open_browser: bool = True, limit: Optional[int] = None):
         console.print("[dim]Tip: You can increase `hours_old` to 48 or 72 in profile.yaml, or expand keywords.[/dim]")
         return
 
+    # 2b. Enforce strict location preference: Bengaluru or Remote only
+    jobs = [j for j in jobs if is_acceptable_location(j.location, j.is_remote, j.title)]
     total_scraped = len(jobs)
 
     # 3. Apply Experience & Seniority Filtering

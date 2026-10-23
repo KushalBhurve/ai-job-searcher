@@ -30,16 +30,47 @@ def clean_text(text: Any) -> str:
         return ""
     return str(text).strip()
 
+def is_acceptable_location(loc: str, is_remote: bool, title: str) -> bool:
+    """
+    Enforces candidate location preference:
+    - Bengaluru / Bangalore / Karnataka
+    - OR Remote (anywhere)
+    - If explicitly located in another city (Hyderabad, Pune, Mumbai, Delhi, Gurgaon, Chennai, etc.) and not remote, reject.
+    """
+    l = (loc or "").lower().strip()
+    t = (title or "").lower()
+
+    if is_remote or "remote" in l or "remote" in t or "work from home" in l or "wfh" in l:
+        return True
+
+    if any(c in l for c in ["bengaluru", "bangalore", "karnataka", "blr"]):
+        return True
+
+    # Other non-Bangalore cities without remote
+    other_cities = [
+        "hyderabad", "pune", "mumbai", "delhi", "gurgaon", "gurugram", 
+        "noida", "chennai", "kolkata", "ahmedabad", "chandigarh", 
+        "coimbatore", "kochi", "trivandrum", "indore", "jaipur"
+    ]
+    for city in other_cities:
+        if city in l:
+            return False
+
+    return True
+
 def scrape_all_jobs(search_cfg: SearchConfig) -> List[JobPost]:
     """
     Scrapes job portals based on SearchConfig (keywords, locations, sites, hours_old).
     Deduplicates results and returns a list of JobPost objects.
     """
     all_jobs: Dict[str, JobPost] = {}
-    sites = [s.lower() for s in search_cfg.sites]
+    # Filter out Glassdoor on automated runs because it blocks cloud/datacenter IPs with 403
+    sites = [s.lower() for s in search_cfg.sites if s.lower() != "glassdoor"]
+    if not sites:
+        sites = ["linkedin", "indeed"]
 
-    console.print(f"[bold cyan]🔍 Starting job scrape for {len(search_cfg.keywords)} keywords across {len(sites)} platforms...[/bold cyan]")
-    console.print(f"[dim]Filter: Posted within last {search_cfg.hours_old} hours[/dim]\n")
+    console.print(f"[bold cyan]🔍 Starting job scrape for {len(search_cfg.keywords)} keywords across {len(sites)} platforms ({', '.join(sites)})...[/bold cyan]")
+    console.print(f"[dim]Locations: {', '.join(search_cfg.locations)} | Filter: Posted within last {search_cfg.hours_old} hours[/dim]\n")
 
     for keyword in search_cfg.keywords:
         for location in search_cfg.locations:
@@ -74,15 +105,20 @@ def scrape_all_jobs(search_cfg: SearchConfig) -> List[JobPost]:
                     if not title or not job_url:
                         continue
 
+                    loc = clean_text(row.get("location")) or location
+                    is_remote = bool(row.get("is_remote")) if "is_remote" in row else False
+
+                    # Enforce location rule: Bangalore or Remote only
+                    if not is_acceptable_location(loc, is_remote, title):
+                        continue
+
                     # Deduplication key based on title + company
                     dedup_key = f"{title.lower()}::{company.lower()}"
                     if dedup_key in all_jobs:
                         continue
 
                     job_id = generate_job_id(site, title, company, job_url)
-                    loc = clean_text(row.get("location")) or location
                     date_posted = clean_text(row.get("date_posted"))
-                    is_remote = bool(row.get("is_remote")) if "is_remote" in row else False
                     description = clean_text(row.get("description"))
 
                     # Format salary if available
