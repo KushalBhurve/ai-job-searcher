@@ -1,0 +1,73 @@
+name: ⚡ Daily AI Job Radar
+
+on:
+  schedule:
+    # Runs daily at 02:30 UTC (8:00 AM IST)
+    - cron: '30 2 * * *'
+  # Allows manual 1-click trigger from GitHub Actions UI anytime
+  workflow_dispatch:
+    inputs:
+      evaluate_all:
+        description: 'Deep evaluate all scraped jobs with AI'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  job-radar:
+    name: Scrape 24h Jobs & Send Alerts
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: 📦 Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 🚀 Run AI Job Searcher & Dispatch Alerts
+        env:
+          # Free Cloud LLM (Groq)
+          AI_PROVIDER: free_api
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+
+          # Master Notification Switch & 60% Match Threshold
+          NOTIFICATIONS_ENABLED: 'true'
+          NOTIFICATION_MIN_SCORE: '60'
+
+          # WhatsApp via CallMeBot (Free)
+          WHATSAPP_ENABLED: ${{ secrets.WHATSAPP_ENABLED || 'true' }}
+          CALLMEBOT_PHONE: ${{ secrets.CALLMEBOT_PHONE }}
+          CALLMEBOT_API_KEY: ${{ secrets.CALLMEBOT_API_KEY }}
+
+          # Email via Gmail SMTP (Optional)
+          EMAIL_ENABLED: ${{ secrets.EMAIL_ENABLED || 'false' }}
+          GMAIL_SENDER: ${{ secrets.GMAIL_SENDER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
+        run: |
+          if [ "${{ github.event.inputs.evaluate_all }}" = "true" ]; then
+            python main.py run --all --no-browser
+          else
+            python main.py run --no-browser
+          fi
+
+      - name: 📊 Upload HTML Dashboard & CSV Reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: daily-job-reports-${{ github.run_id }}
+          path: |
+            results/*.html
+            results/*.csv
+            results/*.json
+          retention-days: 14
