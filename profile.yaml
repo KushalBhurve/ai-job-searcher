@@ -144,28 +144,40 @@ ai_matcher:
   # Minimum AI score (0-100) to flag as a recommended match
   min_match_score: 60
 
-# Notifications (For future hosting & automated daily alerts)
+# Notifications & Instant Job Match Alerts (> 60% match)
 notifications:
-  enabled: false
+  # Set to true to enable alerts (can also be enabled via NOTIFICATIONS_ENABLED in .env)
+  enabled: true
+
+  # Instantly dispatch alert as soon as a job is deep analyzed by AI
+  notify_on_analysis: true
+
+  # Minimum match score percentage required to trigger an instant alert
+  min_score: 60
 
   channels:
     email:
+      # Send full JD, match scorecard, and 1-click apply button via Email
       enabled: false
       smtp_server: "smtp.gmail.com"
       smtp_port: 587
-      sender_email: ""
-      sender_password: ""
-      recipient_email: ""
+      sender_email: ""           # Your Gmail (or GMAIL_SENDER in .env)
+      sender_password: ""        # 16-char Gmail App Password (or GMAIL_APP_PASSWORD in .env)
+      recipient_email: ""        # Your recipient email (or RECIPIENT_EMAIL in .env)
 
     whatsapp:
-      # Free WhatsApp via CallMeBot (https://www.callmebot.com/)
+      # Free instant WhatsApp alert with role, match score, JD snippet, and direct apply link
+      # Powered by CallMeBot (100% Free - https://www.callmebot.com/)
+      # 1. Message "I allow callmebot to send me messages" to +34 941 86 01 02 on WhatsApp
+      # 2. CallMeBot will reply with your API Key
+      # 3. Enter your phone number (international format without '+') and API key below:
       enabled: false
       provider: "callmebot"
-      phone_number: ""
-      api_key: ""
+      phone_number: ""           # e.g., 919876543210 (or CALLMEBOT_PHONE in .env)
+      api_key: ""                # Your CallMeBot API Key (or CALLMEBOT_API_KEY in .env)
 
     telegram:
-      # Free Telegram Bot alert
+      # Free Telegram Bot alerts
       enabled: false
-      bot_token: ""
-      chat_id: ""
+      bot_token: ""              # Telegram Bot Token (or TELEGRAM_BOT_TOKEN in .env)
+      chat_id: ""                # Telegram Chat ID (or TELEGRAM_CHAT_ID in .env)

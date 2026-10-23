@@ -18,7 +18,7 @@ from config import load_config
 from scraper import scrape_all_jobs
 from matcher import evaluate_all_jobs, evaluate_single_job
 from reporter import print_terminal_summary, export_reports
-from notifier import dispatch_all_notifications
+from notifier import dispatch_all_notifications, notify_job_match
 from models import JobPost, MatchAnalysis
 import db
 
@@ -142,8 +142,15 @@ def run_job_search(open_browser: bool = True, limit: Optional[int] = None):
     # 10. Export Reports (now includes 100% of scraped jobs)
     paths = export_reports(all_reporting_jobs)
 
-    # 10. Notifications
-    dispatch_all_notifications(recommended_jobs or all_reporting_jobs, cfg.notifications)
+    # 10. Notifications (instant alerts for individual jobs >= min_score)
+    threshold = cfg.notifications.min_score if hasattr(cfg.notifications, "min_score") else cfg.ai_matcher.min_match_score
+    if cfg.notifications.enabled:
+        for rj in recommended_jobs:
+            if rj.match_analysis and rj.match_analysis.match_score >= threshold:
+                try:
+                    notify_job_match(rj, rj.match_analysis, cfg.notifications)
+                except Exception as n_err:
+                    console.print(f"[yellow]⚠️ Could not send alert for {rj.title}: {n_err}[/yellow]")
 
     # 11. Open HTML Dashboard
     if open_browser and paths.get("html"):

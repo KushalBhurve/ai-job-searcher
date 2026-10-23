@@ -532,8 +532,11 @@
         </div>
       </div>
       <div class="header-actions">
+        <button id="testAlertBtn" class="batch-btn" style="background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.35); color: #34d399;" onclick="triggerTestAlert()">
+          <span>🔔</span> Test Alert
+        </button>
         <button id="resetBtn" class="reset-btn" onclick="triggerReset()">
-          <span>🗑️</span> Reset Database
+          <span>🗑️</span> Reset
         </button>
         <button id="batchBtn" class="batch-btn" onclick="triggerBatchAnalysis()">
           <span>🤖</span> Batch Analyze All (AI)
@@ -765,14 +768,22 @@
               ${job.is_remote ? '<span class="meta-tag tag-remote">🌐 Remote</span>' : ''}
               ${job.salary ? `<span class="meta-tag">💰 ${escapeHtml(job.salary)}</span>` : ''}
               ${job.date_posted ? `<span class="meta-tag">🕒 ${escapeHtml(job.date_posted)}</span>` : ''}
+              ${job.notified ? '<span class="meta-tag" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">📬 Alerted</span>' : ''}
             </div>
 
             ${aiHtml}
           </div>
 
-          <a href="${job.job_url}" target="_blank" rel="noopener noreferrer" class="apply-btn">
-            Apply on ${capitalize(job.site)} →
-          </a>
+          <div style="display: flex; gap: 0.6rem; margin-top: 1rem; align-items: stretch;">
+            ${(!job.summary_reason || job.decision === 'UNASSESSED') ? `
+              <button class="analyze-card-btn" style="flex: 1; padding: 0.7rem 0.8rem; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.4); color: #a5b4fc; transition: all 0.2s;" onclick="analyzeJob('${escapeHtml(job.id)}', this)">
+                ⚡ Analyze & Alert
+              </button>
+            ` : ''}
+            <a href="${job.job_url}" target="_blank" rel="noopener noreferrer" class="apply-btn" style="flex: ${(!job.summary_reason || job.decision === 'UNASSESSED') ? '1.8' : '1'}; margin-top: 0;">
+              Apply on ${capitalize(job.site)} →
+            </a>
+          </div>
         `;
 
         jobsGrid.appendChild(card);
@@ -937,6 +948,61 @@
     function capitalize(str) {
       if (!str) return '';
       return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    async function analyzeJob(jobId, btn) {
+      if (!btn) return;
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<span>⏳</span> Evaluating...`;
+      try {
+        const res = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/analyze`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          if (data.notification_sent) {
+            btn.innerHTML = `✓ ${data.match_score}% (Alert Sent!)`;
+            btn.style.color = '#34d399';
+            btn.style.borderColor = 'rgba(16, 185, 129, 0.5)';
+          } else {
+            btn.innerHTML = `✓ ${data.match_score}% Analyzed`;
+            btn.style.color = '#38bdf8';
+          }
+          updateStats();
+          setTimeout(() => {
+            resetAndFetch();
+          }, 1500);
+        } else {
+          alert("Analysis error: " + (data.message || "Failed"));
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+        }
+      } catch (e) {
+        alert("Failed to analyze job: " + e.message);
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+
+    async function triggerTestAlert() {
+      const channel = prompt("Which alert channel would you like to test? Type 'all', 'whatsapp', or 'email':", "all");
+      if (!channel) return;
+      const testBtn = document.getElementById('testAlertBtn');
+      if (testBtn) {
+        testBtn.disabled = true;
+        testBtn.innerText = "Sending test...";
+      }
+      try {
+        const res = await fetch(`/api/notifications/test?channel=${encodeURIComponent(channel.trim().toLowerCase())}`, { method: 'POST' });
+        const data = await res.json();
+        alert(data.message);
+      } catch (e) {
+        alert("Test alert error: " + e.message);
+      } finally {
+        if (testBtn) {
+          testBtn.disabled = false;
+          testBtn.innerHTML = "<span>🔔</span> Test Alert";
+        }
+      }
     }
 
     // Initial load

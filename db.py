@@ -34,13 +34,20 @@ def init_db():
         missing_skills TEXT,
         summary_reason TEXT,
         recommended_action TEXT,
+        notified INTEGER DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
+    try:
+        cursor.execute("ALTER TABLE jobs ADD COLUMN notified INTEGER DEFAULT 0")
+    except Exception:
+        pass
+
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_jobs_score ON jobs(match_score DESC)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_jobs_created ON jobs(created_at DESC)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_jobs_site ON jobs(site)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_jobs_notified ON jobs(notified)")
     conn.commit()
     conn.close()
 
@@ -132,6 +139,73 @@ def update_job_analysis(job_id: str, analysis: MatchAnalysis):
     conn.commit()
     conn.close()
 
+def mark_job_notified(job_id: str):
+    """Marks a job as notified so user does not receive duplicate alerts."""
+    init_db()
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE jobs SET notified = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?", (job_id,))
+    conn.commit()
+    conn.close()
+
+def is_job_notified(job_id: str) -> bool:
+    """Checks whether an alert has already been dispatched for this job."""
+    init_db()
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT notified FROM jobs WHERE id = ?", (job_id,))
+    row = cursor.fetchone()
+    conn.close()
+    if row and "notified" in row.keys() and row["notified"]:
+        return bool(row["notified"])
+    return False
+
+def get_job_by_id(job_id: str) -> Optional[JobPost]:
+    """Retrieve a single JobPost with its MatchAnalysis if evaluated."""
+    init_db()
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM jobs WHERE id = ?", (job_id,))
+    row = cursor.fetchone()
+    conn.close()
+    if not row:
+        return None
+
+    matching_skills = []
+    missing_skills = []
+    try:
+        if row["matching_skills"]:
+            matching_skills = json.loads(row["matching_skills"])
+        if row["missing_skills"]:
+            missing_skills = json.loads(row["missing_skills"])
+    except Exception:
+        pass
+
+    analysis = None
+    if row["decision"] != "UNASSESSED":
+        analysis = MatchAnalysis(
+            match_score=row["match_score"],
+            decision=row["decision"],
+            key_matching_skills=matching_skills,
+            missing_skills_or_gaps=missing_skills,
+            summary_reason=row["summary_reason"] or "",
+            recommended_action=row["recommended_action"] or ""
+        )
+
+    return JobPost(
+        id=row["id"],
+        title=row["title"],
+        company=row["company"],
+        location=row["location"] or "",
+        site=row["site"] or "",
+        job_url=row["job_url"],
+        date_posted=row["date_posted"] or "",
+        is_remote=bool(row["is_remote"]),
+        salary=row["salary"] or "",
+        description=row["description"] or "",
+        match_analysis=analysis
+    )
+
 def row_to_job(row: sqlite3.Row) -> dict:
     matching_skills = []
     missing_skills = []
@@ -140,6 +214,12 @@ def row_to_job(row: sqlite3.Row) -> dict:
             matching_skills = json.loads(row["matching_skills"])
         if row["missing_skills"]:
             missing_skills = json.loads(row["missing_skills"])
+    except Exception:
+        pass
+
+    is_notified = False
+    try:
+        is_notified = bool(row["notified"])
     except Exception:
         pass
 
@@ -160,6 +240,7 @@ def row_to_job(row: sqlite3.Row) -> dict:
         "missing_skills": missing_skills,
         "summary_reason": row["summary_reason"] or "",
         "recommended_action": row["recommended_action"] or "",
+        "notified": is_notified,
         "created_at": str(row["created_at"])
     }
 

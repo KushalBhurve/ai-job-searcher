@@ -10,6 +10,9 @@ import uvicorn
 import db
 from engine import engine
 from config import load_config
+from matcher import evaluate_single_job
+from notifier import notify_job_match
+from models import JobPost, MatchAnalysis
 
 app = FastAPI(title="AI Job Searcher API", version="2.0")
 
@@ -98,6 +101,84 @@ def reset_database_api(clear_files: bool = Query(False)):
                 except Exception:
                     pass
     return {"success": True, "message": "Database and records reset successfully"}
+
+@app.post("/api/jobs/{job_id}/analyze")
+def analyze_single_job_api(job_id: str, force_notify: bool = Query(False)):
+    """Deep analyze an individual job on demand and notify if match score >= 60%."""
+    cfg = load_config()
+    job = db.get_job_by_id(job_id)
+    if not job:
+        return JSONResponse({"success": False, "message": "Job not found in database"}, status_code=404)
+
+    try:
+        analysis = evaluate_single_job(job, cfg.candidate_profile, cfg.ai_matcher)
+        job.match_analysis = analysis
+        db.update_job_analysis(job.id, analysis)
+
+        notification_sent = False
+        channels_sent = {}
+        threshold = cfg.notifications.min_score
+
+        if (cfg.notifications.enabled and analysis.match_score >= threshold) or force_notify:
+            channels_sent = notify_job_match(job, analysis, cfg.notifications, force=force_notify)
+            notification_sent = any(channels_sent.values())
+
+        return {
+            "success": True,
+            "job_id": job.id,
+            "match_score": analysis.match_score,
+            "decision": analysis.decision,
+            "summary_reason": analysis.summary_reason,
+            "matching_skills": analysis.key_matching_skills,
+            "missing_skills": analysis.missing_skills_or_gaps,
+            "recommended_action": analysis.recommended_action,
+            "notification_sent": notification_sent,
+            "channels": channels_sent
+        }
+    except Exception as e:
+        return JSONResponse({"success": False, "message": str(e)}, status_code=500)
+
+@app.post("/api/notifications/test")
+def test_notification_api(channel: str = Query("all")):
+    """Send a sample notification to verify WhatsApp and/or Email setup."""
+    cfg = load_config()
+    test_job = JobPost(
+        id="test-notification-sample",
+        title="AI Engineer (GenAI / Python)",
+        company="Antigravity AI Labs",
+        location="Bengaluru / Remote",
+        site="linkedin",
+        job_url="https://www.linkedin.com/jobs/view/sample",
+        date_posted="Just now",
+        is_remote=True,
+        salary="₹18 - ₹24 LPA",
+        description="We are seeking an AI Engineer with 1-2 years experience in Python, LangGraph, RAG pipelines, FastAPI, and Vertex AI/GCP. You will develop multimodal agents and automated pipelines."
+    )
+    test_analysis = MatchAnalysis(
+        match_score=88,
+        decision="STRONG_MATCH",
+        key_matching_skills=["Python", "LangGraph", "RAG", "FastAPI", "Vertex AI"],
+        missing_skills_or_gaps=["Kafka"],
+        summary_reason="Excellent alignment with Kushal's GenAI background, LangGraph and GCP experience.",
+        recommended_action="High priority recommendation. Apply immediately."
+    )
+
+    test_cfg = cfg.notifications.model_copy(deep=True)
+    test_cfg.enabled = True
+    if channel == "whatsapp":
+        test_cfg.channels.whatsapp.enabled = True
+        test_cfg.channels.email.enabled = False
+    elif channel == "email":
+        test_cfg.channels.email.enabled = True
+        test_cfg.channels.whatsapp.enabled = False
+
+    res = notify_job_match(test_job, test_analysis, test_cfg, force=True)
+    sent = any(res.values())
+    return {
+        "success": sent,
+        "channels": res,
+        "message": "Test notification sent! Check your WhatsApp or Email inbox." if sent else "Failed to send. Please check your credentials in profile.yaml or .env"
+    }
 
 @app.get("/")
 def serve_index():

@@ -9,6 +9,7 @@ from config import load_config
 from scraper import scrape_all_jobs
 from matcher import evaluate_single_job
 from models import JobPost, MatchAnalysis
+from notifier import notify_job_match
 
 console = Console(highlight=False)
 logger = logging.getLogger("ai_job_searcher.engine")
@@ -153,9 +154,17 @@ class ScrapeEngine:
                 
                 try:
                     analysis = evaluate_single_job(job, cfg.candidate_profile, cfg.ai_matcher)
+                    job.match_analysis = analysis
                     db.update_job_analysis(job.id, analysis)
                     with self._lock:
                         self.total_evaluated += 1
+
+                    # Trigger instant alert if job matches threshold (e.g. >= 60%)
+                    if cfg.notifications.enabled and cfg.notifications.notify_on_analysis and analysis.match_score >= cfg.notifications.min_score:
+                        try:
+                            notify_job_match(job, analysis, cfg.notifications)
+                        except Exception as n_err:
+                            logger.warning(f"Notification error for {job.id}: {n_err}")
                 except Exception as e:
                     logger.warning(f"Error evaluating {job.id}: {e}")
 
@@ -213,9 +222,17 @@ class ScrapeEngine:
 
                     try:
                         analysis = evaluate_single_job(job, cfg.candidate_profile, cfg.ai_matcher)
+                        job.match_analysis = analysis
                         db.update_job_analysis(job.id, analysis)
                         with self._lock:
                             self.total_evaluated += 1
+
+                        # Trigger instant alert if job matches threshold (e.g. >= 60%)
+                        if cfg.notifications.enabled and cfg.notifications.notify_on_analysis and analysis.match_score >= cfg.notifications.min_score:
+                            try:
+                                notify_job_match(job, analysis, cfg.notifications)
+                            except Exception as n_err:
+                                logger.warning(f"Notification error for {job.id}: {n_err}")
                     except Exception as e:
                         logger.warning(f"Error evaluating {job.id}: {e}")
 
