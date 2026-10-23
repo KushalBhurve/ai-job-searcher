@@ -46,7 +46,7 @@ class OllamaConfig(BaseModel):
 class FreeApiConfig(BaseModel):
     provider: str = "groq"
     api_key: str = ""
-    model: str = "llama-3.3-70b-versatile"
+    model: str = "openai/gpt-oss-120b"
 
 class AiMatcherConfig(BaseModel):
     provider: str = "ollama"
@@ -125,6 +125,8 @@ def load_config(file_path: Path = CONFIG_FILE) -> AppConfig:
     # AI overrides from environment variables
     if os.environ.get("GROQ_API_KEY"):
         cfg.ai_matcher.free_api.api_key = os.environ["GROQ_API_KEY"]
+    if os.environ.get("GROQ_MODEL"):
+        cfg.ai_matcher.free_api.model = os.environ["GROQ_MODEL"]
     if os.environ.get("AI_PROVIDER"):
         cfg.ai_matcher.provider = os.environ["AI_PROVIDER"]
     elif cfg.ai_matcher.free_api.api_key and cfg.ai_matcher.provider == "ollama" and os.environ.get("GROQ_API_KEY"):

@@ -137,7 +137,7 @@ ai_matcher:
   free_api:
     provider: "groq"
     api_key: ""
-    model: "llama-3.3-70b-versatile"
+    model: "openai/gpt-oss-120b"
 
   # Minimum AI score (0-100) to flag as a recommended match
   min_match_score: 60

@@ -134,15 +134,45 @@ Evaluate the candidate for this job and return the JSON evaluation.
 
             from groq import Groq
             client = Groq(api_key=key)
-            completion = client.chat.completions.create(
-                model=ai_cfg.free_api.model or "llama-3.3-70b-versatile",
-                messages=[
-                    {"role": "system", "content": EVALUATION_SYSTEM_PROMPT},
-                    {"role": "user", "content": user_prompt}
-                ],
-                response_format={"type": "json_object"}
-            )
-            content = completion.choices[0].message.content
+
+            primary_model = ai_cfg.free_api.model or "openai/gpt-oss-120b"
+            candidate_models = [
+                primary_model,
+                "openai/gpt-oss-120b",
+                "openai/gpt-oss-20b",
+                "qwen/qwen3.8-27b",
+                "llama-3.1-8b-instant",
+                "llama-3.3-70b-versatile",
+            ]
+            # Deduplicate preserving order
+            seen = set()
+            models_to_try = [m for m in candidate_models if m and not (m in seen or seen.add(m))]
+
+            content = None
+            last_err = None
+            for model_name in models_to_try:
+                try:
+                    completion = client.chat.completions.create(
+                        model=model_name,
+                        messages=[
+                            {"role": "system", "content": EVALUATION_SYSTEM_PROMPT},
+                            {"role": "user", "content": user_prompt}
+                        ],
+                        response_format={"type": "json_object"}
+                    )
+                    content = completion.choices[0].message.content
+                    ai_cfg.free_api.model = model_name  # Cache working model
+                    break
+                except Exception as ex:
+                    last_err = ex
+                    err_msg = str(ex).lower()
+                    if "model_not_found" in err_msg or "does not exist" in err_msg or "404" in err_msg or "access" in err_msg:
+                        logger.info(f"Model {model_name} not accessible on Groq, trying next fallback...")
+                        continue
+                    raise ex
+
+            if content is None:
+                raise last_err or RuntimeError("No compatible Groq model available.")
             parsed = extract_json(content)
             return MatchAnalysis(
                 match_score=int(parsed.get("match_score", 50)),

@@ -39,6 +39,7 @@ jobs:
           # Free Cloud LLM (Groq)
           AI_PROVIDER: free_api
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GROQ_MODEL: ${{ secrets.GROQ_MODEL || 'openai/gpt-oss-120b' }}
 
           # Master Notification Switch & 60% Match Threshold
           NOTIFICATIONS_ENABLED: 'true'
