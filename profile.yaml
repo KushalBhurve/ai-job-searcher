@@ -31,15 +31,25 @@ search:
   # Target results wanted per query per site (25 is optimal for 24h freshness)
   results_per_query: 25
 
-  # Job portals to scrape: "linkedin", "indeed" (Glassdoor blocks datacenter IPs with 403)
+  # Job portals to scrape for India & Bengaluru:
+  # - "naukri": India's #1 tech job portal with largest volume
+  # - "indeed": Excellent coverage in India (country: "india")
+  # - "linkedin": High quality tech postings (subject to guest rate limits)
+  # Note: "zip_recruiter" (US-only) and "bayt" (Middle East-only) block with 403.
+  # "bdjobs" (Bangladesh) and "hellowork" (France) do not index India tech jobs.
   sites:
-    - "linkedin"
-    - "indeed"
-    - "zip_recruiter"
-    - "bayt"
     - "naukri"
-    - "bdjobs"
-    - "hellowork"
+    - "indeed"
+    - "linkedin"
+
+  # Optional: Residential/rotating proxies (e.g. ["http://user:pass@host:port"])
+  proxies: []
+
+  # Polite query pacing (seconds) to prevent LinkedIn HTTP 429 rate limits
+  delay_seconds: 2.5
+
+  # Fetch full descriptions from LinkedIn (keep false to avoid hitting LinkedIn rate limits)
+  linkedin_fetch_description: false
 
   # Country code
   country: "india"

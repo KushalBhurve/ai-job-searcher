@@ -11,9 +11,12 @@ class SearchConfig(BaseModel):
     locations: List[str] = Field(default_factory=lambda: ["Bengaluru", "Remote"])
     hours_old: int = 24
     results_per_query: int = 15
-    sites: List[str] = Field(default_factory=lambda: ["linkedin", "indeed", "glassdoor"])
+    sites: List[str] = Field(default_factory=lambda: ["naukri", "indeed", "linkedin"])
     country: str = "india"
     is_remote: Optional[bool] = None
+    proxies: Optional[List[str]] = Field(default_factory=list)
+    delay_seconds: float = 2.5
+    linkedin_fetch_description: bool = False
 
 class ExperienceFilterConfig(BaseModel):
     max_experience_years: int = 3
@@ -121,6 +124,18 @@ def load_config(file_path: Path = CONFIG_FILE) -> AppConfig:
         data = yaml.safe_load(f) or {}
     
     cfg = AppConfig(**data)
+
+    # Search & Scraping overrides from environment variables
+    if os.environ.get("PROXIES") or os.environ.get("PROXY"):
+        raw_proxies = os.environ.get("PROXIES") or os.environ.get("PROXY", "")
+        cfg.search.proxies = [p.strip() for p in raw_proxies.split(",") if p.strip()]
+    if os.environ.get("LINKEDIN_FETCH_DESCRIPTION"):
+        cfg.search.linkedin_fetch_description = os.environ["LINKEDIN_FETCH_DESCRIPTION"].lower() in ("1", "true", "yes")
+    if os.environ.get("SCRAPE_DELAY_SECONDS"):
+        try:
+            cfg.search.delay_seconds = float(os.environ["SCRAPE_DELAY_SECONDS"])
+        except ValueError:
+            pass
 
     # AI overrides from environment variables
     if os.environ.get("GROQ_API_KEY"):

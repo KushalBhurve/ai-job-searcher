@@ -7,12 +7,16 @@ if sys.platform == "win32":
         pass
 
 import time
+import random
 import hashlib
 import logging
 from typing import List, Dict, Any, Optional
 import pandas as pd
 from jobspy import scrape_jobs
 from rich.console import Console
+
+# Suppress noisy raw internal JobSpy exception logs (e.g. 403/429) from cluttering terminal
+logging.getLogger("jobspy").setLevel(logging.CRITICAL)
 
 from config import SearchConfig
 from models import JobPost
@@ -64,12 +68,29 @@ def scrape_all_jobs(search_cfg: SearchConfig) -> List[JobPost]:
     Deduplicates results and returns a list of JobPost objects.
     """
     all_jobs: Dict[str, JobPost] = {}
-    # Filter out Glassdoor on automated runs because it blocks cloud/datacenter IPs with 403
-    sites = [s.lower() for s in search_cfg.sites if s.lower() != "glassdoor"]
-    if not sites:
-        sites = ["linkedin", "indeed"]
+    proxies = search_cfg.proxies if search_cfg.proxies else None
 
-    console.print(f"[bold cyan]🔍 Starting job scrape for {len(search_cfg.keywords)} keywords across {len(sites)} platforms ({', '.join(sites)})...[/bold cyan]")
+    # Regional or high-block portals that consistently fail with 403 or return non-India results without dedicated proxies
+    incompatible_sites = {
+        "zip_recruiter", "ziprecruiter", "bayt", "glassdoor", "bdjobs", "hellowork"
+    }
+
+    filtered_sites = []
+    skipped_sites = []
+    for s in search_cfg.sites:
+        s_clean = s.lower().strip()
+        if not proxies and s_clean in incompatible_sites:
+            skipped_sites.append(s_clean)
+        else:
+            filtered_sites.append(s_clean)
+
+    if skipped_sites:
+        console.print(f"[dim]ℹ️ Skipping proxy-restricted portals: {', '.join(skipped_sites)} (use residential proxies to enable)[/dim]")
+
+    if not filtered_sites:
+        filtered_sites = ["naukri", "indeed", "linkedin"]
+
+    console.print(f"[bold cyan]🔍 Starting job scrape for {len(search_cfg.keywords)} keywords across {len(filtered_sites)} platforms ({', '.join(filtered_sites)})...[/bold cyan]")
     console.print(f"[dim]Locations: {', '.join(search_cfg.locations)} | Filter: Posted within last {search_cfg.hours_old} hours[/dim]\n")
 
     for keyword in search_cfg.keywords:
@@ -79,7 +100,7 @@ def scrape_all_jobs(search_cfg: SearchConfig) -> List[JobPost]:
             try:
                 # Run scrape_jobs with hours_old
                 df: pd.DataFrame = scrape_jobs(
-                    site_name=sites,
+                    site_name=filtered_sites,
                     search_term=keyword,
                     location=location,
                     results_wanted=search_cfg.results_per_query,
@@ -87,12 +108,13 @@ def scrape_all_jobs(search_cfg: SearchConfig) -> List[JobPost]:
                     country_indeed=search_cfg.country,
                     is_remote=search_cfg.is_remote if search_cfg.is_remote is not None else False,
                     fetch_description=True,
-                    linkedin_fetch_description=True,
+                    linkedin_fetch_description=search_cfg.linkedin_fetch_description,
+                    proxies=proxies,
                     verbose=0
                 )
 
                 if df is None or df.empty:
-                    console.print(f"   [yellow]No new jobs found for {keyword} in {location}[/yellow]")
+                    console.print(f"   [yellow]No new jobs found for '{keyword}' in '{location}'[/yellow]")
                     continue
 
                 count_added = 0
@@ -149,13 +171,18 @@ def scrape_all_jobs(search_cfg: SearchConfig) -> List[JobPost]:
                     all_jobs[dedup_key] = job_post
                     count_added += 1
 
-                console.print(f"   [green]✓ Found {len(df)} postings ({count_added} unique added)[/green]")
+                # Platform breakdown summary
+                platform_counts = df['site'].value_counts().to_dict() if 'site' in df else {}
+                platform_summary = ", ".join(f"{p}: {c}" for p, c in platform_counts.items())
+                console.print(f"   [green]✓ Found {len(df)} postings ({count_added} unique added)[/green] [dim]({platform_summary})[/dim]")
 
             except Exception as e:
                 console.print(f"   [red]⚠️ Error scraping {keyword} in {location}: {e}[/red]")
                 logger.warning(f"Error during scrape for {keyword}: {e}")
 
-            time.sleep(1.2)
+            # Polite pacing with random jitter to prevent rate limits
+            jitter = random.uniform(0.3, 1.2)
+            time.sleep(search_cfg.delay_seconds + jitter)
 
     job_list = list(all_jobs.values())
     console.print(f"\n[bold green]✨ Scraping complete! Total unique jobs collected: {len(job_list)}[/bold green]\n")
