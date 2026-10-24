@@ -35,7 +35,7 @@ search:
   sites:
     - "linkedin"
     - "indeed"
-    - "ziprecruiter"
+    - "zip_recruiter"
     - "bayt"
     - "naukri"
     - "bdjobs"
